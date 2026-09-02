@@ -20,6 +20,13 @@ bool display_init(void);
 void display_clear(void);
 
 /**
+ * @brief Read display value.
+ *
+ * @return Current display value (0 - 99), or -1 if the display is blank.
+ */
+int8_t display_read(void);
+
+/**
  * @brief Write display value.
  *
  * @param[in] value Display value (0 - 99).

@@ -27,6 +27,9 @@ constexpr std::uint8_t DisplayMask{
 /** Bit mask of the relay, which shares I/O port A with the display. */
 constexpr std::uint8_t RelayMask{PIN7_bm};
 
+/** Value display_read gives when the display is blank. */
+constexpr std::int8_t NoValue{-1};
+
 /** BCD value the decoder blanks a digit for, mirroring BCD_BLANK in display.c. */
 constexpr std::uint8_t BcdBlank{15U};
 
@@ -389,6 +392,101 @@ TEST(Display, WriteAfterClearShowsTheValueAgain)
 
     elapseRefresh();
     EXPECT_EQ(shownBcd(), displayTens);
+}
+
+/**
+ * @brief Test that a display which has been given nothing to show reads as blank.
+ */
+TEST(Display, ReadReturnsBlankBeforeAnythingIsWritten)
+{
+    reset();
+
+    EXPECT_EQ(display_read(), NoValue);
+}
+
+/**
+ * @brief Test that reading the display gives back the value written to it.
+ */
+TEST(Display, ReadReturnsTheValueWritten)
+{
+    constexpr std::int8_t value{42};
+
+    reset();
+    display_write(42U);
+
+    EXPECT_EQ(display_read(), value);
+}
+
+/**
+ * @brief Test that the value can be read before the digits have been lit.
+ *
+ *        The value is what the display was asked to show, not what is lit at this instant, so
+ *        it doesn't wait for a refresh.
+ */
+TEST(Display, ReadDoesNotWaitForARefresh)
+{
+    constexpr std::int8_t value{7};
+
+    reset();
+    display_write(7U);
+
+    EXPECT_EQ(display_read(), value);
+}
+
+/**
+ * @brief Test that zero is a value like any other, and not mistaken for a blank display.
+ *
+ *        This is what the negative return buys: nothing a program can display collides with it.
+ */
+TEST(Display, ReadTellsZeroApartFromBlank)
+{
+    reset();
+    display_write(zero);
+
+    EXPECT_EQ(display_read(), 0);
+    EXPECT_NE(display_read(), NoValue);
+}
+
+/**
+ * @brief Test that a cleared display reads as blank.
+ */
+TEST(Display, ReadReturnsBlankAfterClear)
+{
+    reset();
+    display_write(42U);
+    display_clear();
+
+    EXPECT_EQ(display_read(), NoValue);
+}
+
+/**
+ * @brief Test that writing after clearing reads back the new value.
+ */
+TEST(Display, ReadReturnsTheValueWrittenAfterClear)
+{
+    constexpr std::int8_t value{13};
+
+    reset();
+    display_write(42U);
+    display_clear();
+    display_write(13U);
+
+    EXPECT_EQ(display_read(), value);
+}
+
+/**
+ * @brief Test that a rejected value leaves the display reading what it had.
+ */
+TEST(Display, ReadIgnoresRejectedValues)
+{
+    constexpr std::int8_t value{42};
+    constexpr std::uint8_t justAboveMax{100U};
+
+    reset();
+    display_write(42U);
+    display_write(justAboveMax);
+
+    EXPECT_EQ(display_read(), value);
 }
 
 /**

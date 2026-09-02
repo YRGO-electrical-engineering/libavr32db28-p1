@@ -41,7 +41,7 @@ hardware can do beyond what the drivers expose.
 | LED                | [include/driver/led.h](./include/driver/led.h)             | Whether an LED is lit        | On, off, inverted or dimmed     |
 | Switch             | [include/driver/sw.h](./include/driver/sw.h)               | Whether a button is pressed  | -                               |
 | Relay              | [include/driver/relay.h](./include/driver/relay.h)         | Whether the relay is closed  | Closed, open or inverted        |
-| Display            | [include/driver/display.h](./include/driver/display.h)     | -                            | A number from 0 to 99           |
+| Display            | [include/driver/display.h](./include/driver/display.h)     | The number being shown       | A number from 0 to 99           |
 | Potentiometer      | [include/driver/pot.h](./include/driver/pot.h)             | A knob, raw, in mV or in %   | -                               |
 | Temperature sensor | [include/driver/temp.h](./include/driver/temp.h)           | Degrees Celsius              | -                               |
 | Joystick           | [include/driver/joystick.h](./include/driver/joystick.h)   | A direction and its button   | -                               |
