@@ -21,6 +21,21 @@ constexpr std::uint16_t secondDelayMs{7U};
 
 /** A delay far longer than the test suite could afford to actually sleep for. */
 constexpr std::uint16_t longDelayMs{60000U};
+
+/** Positions in the list of recorded delays, and one far beyond anything the platform keeps. */
+constexpr std::uint16_t firstDelay{0U};
+constexpr std::uint16_t secondDelay{1U};
+constexpr std::uint16_t unrecordedDelay{1000U};
+
+/** Numbers of recorded delays the tests expect to find. */
+constexpr std::uint16_t oneDelay{1U};
+constexpr std::uint16_t twoDelays{2U};
+
+/** Counter top value producing a one millisecond tick at 4 MHz with a /2 prescaler. */
+constexpr std::uint16_t timerPeriod{1999U};
+
+/** An arbitrary non-zero conversion, written to check that a reset clears the register. */
+constexpr std::uint16_t someConversion{1234U};
 } // namespace
 
 /**
@@ -85,9 +100,9 @@ TEST(HwPlatform, DelaysAreRecorded)
     delay_ms(firstDelayMs);
     delay_ms(secondDelayMs);
 
-    EXPECT_EQ(testDelayCount(), 2U);
-    EXPECT_EQ(testDelayAt(0U), firstDelayMs);
-    EXPECT_EQ(testDelayAt(1U), secondDelayMs);
+    EXPECT_EQ(testDelayCount(), twoDelays);
+    EXPECT_EQ(testDelayAt(firstDelay), firstDelayMs);
+    EXPECT_EQ(testDelayAt(secondDelay), secondDelayMs);
 }
 
 /**
@@ -102,8 +117,8 @@ TEST(HwPlatform, DelaysDoNotSleep)
 
     delay_ms(longDelayMs);
 
-    EXPECT_EQ(testDelayCount(), 1U);
-    EXPECT_EQ(testDelayAt(0U), longDelayMs);
+    EXPECT_EQ(testDelayCount(), oneDelay);
+    EXPECT_EQ(testDelayAt(firstDelay), longDelayMs);
 }
 
 /**
@@ -116,7 +131,7 @@ TEST(HwPlatform, ResetClearsRecordedDelays)
     testHwPlatformReset();
 
     EXPECT_EQ(testDelayCount(), zero);
-    EXPECT_EQ(testDelayAt(0U), zero);
+    EXPECT_EQ(testDelayAt(firstDelay), zero);
 }
 
 /**
@@ -127,8 +142,8 @@ TEST(HwPlatform, ReadingAnUnrecordedDelayReturnsZero)
     testHwPlatformReset();
     delay_ms(firstDelayMs);
 
-    EXPECT_EQ(testDelayAt(1U), zero);
-    EXPECT_EQ(testDelayAt(1000U), zero);
+    EXPECT_EQ(testDelayAt(secondDelay), zero);
+    EXPECT_EQ(testDelayAt(unrecordedDelay), zero);
 }
 
 /**
@@ -137,8 +152,8 @@ TEST(HwPlatform, ReadingAnUnrecordedDelayReturnsZero)
 TEST(HwPlatform, ResetClearsTheAnalogAndTimerPeripherals)
 {
     ADC0.MUXPOS    = ADC_MUXPOS_AIN4_gc;
-    ADC0.RES       = 1234U;
-    TCB0.CCMP      = 1999U;
+    ADC0.RES       = someConversion;
+    TCB0.CCMP      = timerPeriod;
     TCB2.CTRLA     = TCB_ENABLE_bm;
     VREF.ADC0REF   = VREF_REFSEL_VDD_gc;
     PORTD.PIN7CTRL = PORT_PULLUPEN_bm;
@@ -179,9 +194,9 @@ TEST(HwPlatform, TimerCircuitsAreDistinct)
 {
     testHwPlatformReset();
 
-    TCB1.CCMP = 1999U;
+    TCB1.CCMP = timerPeriod;
 
-    EXPECT_EQ(TCB1.CCMP, 1999U);
+    EXPECT_EQ(TCB1.CCMP, timerPeriod);
     EXPECT_EQ(TCB0.CCMP, zero);
     EXPECT_EQ(TCB2.CCMP, zero);
 }

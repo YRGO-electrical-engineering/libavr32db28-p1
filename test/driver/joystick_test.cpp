@@ -22,6 +22,9 @@ constexpr std::uint8_t ButtonMask{PIN7_bm};
 constexpr std::uint16_t center{2048U};
 constexpr std::uint16_t deadZone{1024U};
 
+/** Largest reading a 12-bit conversion produces, i.e. an axis pushed all the way over. */
+constexpr std::uint16_t fullScale{4095U};
+
 /** Value of an input register in which every pin reads high. */
 constexpr std::uint8_t AllPinsHigh{0xFFU};
 
@@ -148,7 +151,7 @@ TEST(Joystick, ReadReportsUpAndDown)
     testHwPlatformReset();
     joystick_init();
 
-    prepareAxes(4095U);
+    prepareAxes(fullScale);
     EXPECT_EQ(joystick_read(), JOYSTICK_UP);
 
     prepareAxes(zero);

@@ -39,6 +39,20 @@ constexpr std::uint16_t TimerPeriod{1999U};
 /** Number of timer circuits the device provides. */
 constexpr std::uint8_t TimerCount{static_cast<std::uint8_t>(TIMER_ID_NONE)};
 
+/** Two digit value most tests write, along with the two digits it is shown as. */
+constexpr std::uint8_t displayValue{42U};
+constexpr std::uint8_t displayTens{displayValue / 10U};
+constexpr std::uint8_t displayOnes{displayValue % 10U};
+
+/** Single digit value, i.e. one shown without a leading zero. */
+constexpr std::uint8_t singleDigitValue{7U};
+
+/** Two digit value written where only the decimal point is of interest. */
+constexpr std::uint8_t decimalPointValue{37U};
+
+/** Number of refresh periods stepped through where several in a row are checked. */
+constexpr std::uint8_t refreshCycles{4U};
+
 /**
  * @brief Release every timer, reset the mocked registers and initialize the display.
  *
@@ -182,7 +196,7 @@ TEST(Display, InitTwiceReservesOneTimerOnly)
 TEST(Display, UpdateWaitsForTheRefreshTime)
 {
     reset();
-    display_write(42U);
+    display_write(displayValue);
 
     // One millisecond short of a digit's time, the display hasn't changed since initialization.
     for (std::uint16_t i{zero}; i < RefreshMs - 1U; ++i)
@@ -204,22 +218,19 @@ TEST(Display, UpdateWaitsForTheRefreshTime)
  */
 TEST(Display, UpdateAlternatesBetweenTheDigits)
 {
-    constexpr std::uint8_t tens{4U};
-    constexpr std::uint8_t ones{2U};
-
     reset();
-    display_write(42U);
+    display_write(displayValue);
 
     elapseRefresh();
-    EXPECT_EQ(shownBcd(), tens);
+    EXPECT_EQ(shownBcd(), displayTens);
     EXPECT_TRUE(digitLit(Digit1Mask));
 
     elapseRefresh();
-    EXPECT_EQ(shownBcd(), ones);
+    EXPECT_EQ(shownBcd(), displayOnes);
     EXPECT_TRUE(digitLit(Digit2Mask));
 
     elapseRefresh();
-    EXPECT_EQ(shownBcd(), tens);
+    EXPECT_EQ(shownBcd(), displayTens);
     EXPECT_TRUE(digitLit(Digit1Mask));
 }
 
@@ -232,9 +243,9 @@ TEST(Display, UpdateAlternatesBetweenTheDigits)
 TEST(Display, OnlyOneDigitIsLitAtATime)
 {
     reset();
-    display_write(42U);
+    display_write(displayValue);
 
-    for (std::uint8_t i{zero}; i < 4U; ++i)
+    for (std::uint8_t i{zero}; i < refreshCycles; ++i)
     {
         elapseRefresh();
         EXPECT_NE(digitLit(Digit1Mask), digitLit(Digit2Mask));
@@ -249,14 +260,12 @@ TEST(Display, OnlyOneDigitIsLitAtATime)
  */
 TEST(Display, UpdateDrivesEveryBcdPin)
 {
-    constexpr std::uint8_t tens{4U};
-
     reset();
-    display_write(42U);
+    display_write(displayValue);
     elapseRefresh();
 
-    EXPECT_EQ(PORTA.OUTSET & BcdMask, tens);
-    EXPECT_EQ(PORTA.OUTCLR & BcdMask, static_cast<std::uint8_t>(~tens & BcdMask));
+    EXPECT_EQ(PORTA.OUTSET & BcdMask, displayTens);
+    EXPECT_EQ(PORTA.OUTCLR & BcdMask, static_cast<std::uint8_t>(~displayTens & BcdMask));
 }
 
 /**
@@ -264,16 +273,14 @@ TEST(Display, UpdateDrivesEveryBcdPin)
  */
 TEST(Display, LeadingZeroIsBlanked)
 {
-    constexpr std::uint8_t ones{7U};
-
     reset();
-    display_write(ones);
+    display_write(singleDigitValue);
 
     elapseRefresh();
     EXPECT_EQ(shownBcd(), BcdBlank);
 
     elapseRefresh();
-    EXPECT_EQ(shownBcd(), ones);
+    EXPECT_EQ(shownBcd(), singleDigitValue);
 }
 
 /**
@@ -283,10 +290,8 @@ TEST(Display, LeadingZeroIsBlanked)
  */
 TEST(Display, LeadingZeroIsKeptWithTheDecimalPoint)
 {
-    constexpr std::uint8_t ones{7U};
-
     reset();
-    display_write(ones);
+    display_write(singleDigitValue);
     display_show_dp(true);
 
     elapseRefresh();
@@ -303,7 +308,7 @@ TEST(Display, LeadingZeroIsKeptWithTheDecimalPoint)
 TEST(Display, DecimalPointBelongsToTheFirstDigit)
 {
     reset();
-    display_write(37U);
+    display_write(decimalPointValue);
     display_show_dp(true);
 
     elapseRefresh();
@@ -321,7 +326,7 @@ TEST(Display, DecimalPointBelongsToTheFirstDigit)
 TEST(Display, DecimalPointIsHiddenByDefault)
 {
     reset();
-    display_write(37U);
+    display_write(decimalPointValue);
 
     elapseRefresh();
     EXPECT_FALSE(dpLit());
@@ -342,17 +347,16 @@ TEST(Display, DecimalPointIsHiddenByDefault)
  */
 TEST(Display, WriteIgnoresValuesAboveNinetyNine)
 {
-    constexpr std::uint8_t tens{4U};
     constexpr std::uint8_t justAboveMax{100U};
     constexpr std::uint8_t largest{255U};
 
     reset();
-    display_write(42U);
+    display_write(displayValue);
     display_write(justAboveMax);
     display_write(largest);
 
     elapseRefresh();
-    EXPECT_EQ(shownBcd(), tens);
+    EXPECT_EQ(shownBcd(), displayTens);
 }
 
 /**
@@ -361,7 +365,7 @@ TEST(Display, WriteIgnoresValuesAboveNinetyNine)
 TEST(Display, ClearBlanksBothDigits)
 {
     reset();
-    display_write(42U);
+    display_write(displayValue);
     display_show_dp(true);
     display_clear();
 
@@ -379,14 +383,12 @@ TEST(Display, ClearBlanksBothDigits)
  */
 TEST(Display, WriteAfterClearShowsTheValueAgain)
 {
-    constexpr std::uint8_t tens{4U};
-
     reset();
     display_clear();
-    display_write(42U);
+    display_write(displayValue);
 
     elapseRefresh();
-    EXPECT_EQ(shownBcd(), tens);
+    EXPECT_EQ(shownBcd(), displayTens);
 }
 
 /**
@@ -395,9 +397,9 @@ TEST(Display, WriteAfterClearShowsTheValueAgain)
 TEST(Display, UpdateLeavesTheRelayPinUntouched)
 {
     reset();
-    display_write(42U);
+    display_write(displayValue);
 
-    for (std::uint8_t i{zero}; i < 4U; ++i)
+    for (std::uint8_t i{zero}; i < refreshCycles; ++i)
     {
         elapseRefresh();
         EXPECT_EQ(PORTA.OUTSET & RelayMask, zero);
@@ -411,7 +413,7 @@ TEST(Display, UpdateLeavesTheRelayPinUntouched)
 TEST(Display, DisplayLeavesOtherPortsUntouched)
 {
     reset();
-    display_write(42U);
+    display_write(displayValue);
     elapseRefresh();
     elapseRefresh();
 

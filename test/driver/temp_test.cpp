@@ -19,6 +19,14 @@ constexpr std::uint8_t zero{0U};
 constexpr std::uint32_t steps{4096U};
 constexpr std::uint32_t supplyMv{5000U};
 
+/** Sensor voltage at zero degrees. It reports ten millivolts per degree above that. */
+constexpr std::uint16_t zeroDegreesMv{500U};
+constexpr std::int16_t zeroDegreesC{0};
+
+/** A room temperature reading, written wherever the exact temperature is beside the point. */
+constexpr std::uint16_t roomTemperatureMv{750U};
+constexpr std::int16_t roomTemperatureC{25};
+
 /**
  * @brief Hand the driver a sensor voltage.
  *
@@ -53,7 +61,7 @@ TEST(Temp, ReadUsesTheSensorsAnalogInput)
 {
     testHwPlatformReset();
     temp_init();
-    prepareVoltage(750U);
+    prepareVoltage(roomTemperatureMv);
     (void)temp_read();
 
     EXPECT_EQ(ADC0.MUXPOS, ADC_MUXPOS_AIN4_gc);
@@ -67,17 +75,20 @@ TEST(Temp, ReadUsesTheSensorsAnalogInput)
  */
 TEST(Temp, ReadConvertsTheSensorVoltageToDegrees)
 {
+    constexpr std::uint16_t boilingMv{1500U};
+    constexpr std::int16_t boilingC{100};
+
     testHwPlatformReset();
     temp_init();
 
-    prepareVoltage(500U);
-    EXPECT_EQ(temp_read(), 0);
+    prepareVoltage(zeroDegreesMv);
+    EXPECT_EQ(temp_read(), zeroDegreesC);
 
-    prepareVoltage(750U);
-    EXPECT_EQ(temp_read(), 25);
+    prepareVoltage(roomTemperatureMv);
+    EXPECT_EQ(temp_read(), roomTemperatureC);
 
-    prepareVoltage(1500U);
-    EXPECT_EQ(temp_read(), 100);
+    prepareVoltage(boilingMv);
+    EXPECT_EQ(temp_read(), boilingC);
 }
 
 /**
@@ -88,17 +99,24 @@ TEST(Temp, ReadConvertsTheSensorVoltageToDegrees)
  */
 TEST(Temp, ReadHandlesTemperaturesBelowZero)
 {
+    constexpr std::uint16_t freezerMv{250U};
+    constexpr std::int16_t freezerC{-25};
+    constexpr std::uint16_t coldRoomMv{400U};
+    constexpr std::int16_t coldRoomC{-10};
+    constexpr std::uint16_t justBelowZeroMv{495U};
+    constexpr std::int16_t justBelowZeroC{-1};
+
     testHwPlatformReset();
     temp_init();
 
-    prepareVoltage(250U);
-    EXPECT_EQ(temp_read(), -25);
+    prepareVoltage(freezerMv);
+    EXPECT_EQ(temp_read(), freezerC);
 
-    prepareVoltage(400U);
-    EXPECT_EQ(temp_read(), -10);
+    prepareVoltage(coldRoomMv);
+    EXPECT_EQ(temp_read(), coldRoomC);
 
-    prepareVoltage(495U);
-    EXPECT_EQ(temp_read(), -1);
+    prepareVoltage(justBelowZeroMv);
+    EXPECT_EQ(temp_read(), justBelowZeroC);
 }
 
 /**
@@ -106,20 +124,31 @@ TEST(Temp, ReadHandlesTemperaturesBelowZero)
  */
 TEST(Temp, ReadRoundsToTheNearestDegree)
 {
+    // Voltages a little either side of the halfway point between two degrees, above and below
+    // zero, together with the degree each one is expected to land on.
+    constexpr std::uint16_t belowMidpointMv{754U};
+    constexpr std::int16_t belowMidpointC{25};
+    constexpr std::uint16_t aboveMidpointMv{756U};
+    constexpr std::int16_t aboveMidpointC{26};
+    constexpr std::uint16_t belowNegativeMidpointMv{246U};
+    constexpr std::int16_t belowNegativeMidpointC{-25};
+    constexpr std::uint16_t aboveNegativeMidpointMv{244U};
+    constexpr std::int16_t aboveNegativeMidpointC{-26};
+
     testHwPlatformReset();
     temp_init();
 
-    prepareVoltage(754U);
-    EXPECT_EQ(temp_read(), 25);
+    prepareVoltage(belowMidpointMv);
+    EXPECT_EQ(temp_read(), belowMidpointC);
 
-    prepareVoltage(756U);
-    EXPECT_EQ(temp_read(), 26);
+    prepareVoltage(aboveMidpointMv);
+    EXPECT_EQ(temp_read(), aboveMidpointC);
 
-    prepareVoltage(246U);
-    EXPECT_EQ(temp_read(), -25);
+    prepareVoltage(belowNegativeMidpointMv);
+    EXPECT_EQ(temp_read(), belowNegativeMidpointC);
 
-    prepareVoltage(244U);
-    EXPECT_EQ(temp_read(), -26);
+    prepareVoltage(aboveNegativeMidpointMv);
+    EXPECT_EQ(temp_read(), aboveNegativeMidpointC);
 }
 
 /**
@@ -131,11 +160,16 @@ TEST(Temp, ReadRoundsToTheNearestDegree)
  */
 TEST(Temp, FailedConversionReadsAsMinusFifty)
 {
+    // A plausible result left in the register, which the driver never gets to read: the
+    // conversion complete flag is not raised, so the read times out.
+    constexpr std::uint16_t unreadResult{1000U};
+    constexpr std::int16_t failedReadingC{-50};
+
     testHwPlatformReset();
     temp_init();
-    ADC0.RES = 1000U;
+    ADC0.RES = unreadResult;
 
-    EXPECT_EQ(temp_read(), -50);
+    EXPECT_EQ(temp_read(), failedReadingC);
 }
 
 /**
@@ -145,7 +179,7 @@ TEST(Temp, ReadDoesNotDriveAnyPin)
 {
     testHwPlatformReset();
     temp_init();
-    prepareVoltage(750U);
+    prepareVoltage(roomTemperatureMv);
     (void)temp_read();
 
     EXPECT_EQ(PORTD.DIR, zero);
