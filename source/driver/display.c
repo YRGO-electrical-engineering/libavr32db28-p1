@@ -21,6 +21,7 @@
 #define BCD_BLANK 15U // BCD value blanking a digit; the decoder only knows 0 - 9.
 #define VALUE_MAX 99U // Largest value two digits can show.
 #define BASE 10U      // Number base, i.e. how the value is split between the digits.
+#define NO_VALUE (-1) // Returned when the display is blank and has no value to report.
 
 #define REFRESH_MS 5U // Time each digit is lit, giving the pair 100 refreshes per second.
 
@@ -36,7 +37,7 @@ typedef enum
 /** Value being displayed (0 - 99). */
 static uint8_t display_value = 0U;
 
-/** True if the display is blanked, false otherwise. */
+/** True if the display is blank, false otherwise. */
 static bool blanked = true;
 
 /** Whether the decimal point is shown. */
@@ -63,7 +64,7 @@ static uint8_t get_bcd(const digit_t digit)
     // The second digit always shows the ones.
     if (DIGIT2 == digit) { return get_ones(); }
 
-    // The first digit shows the tens, blanked when the value has none. The zero is kept when
+    // The first digit shows the tens, blank when the value has none. The zero is kept when
     // the decimal point is shown, since 0.7 reads better than .7.
     const uint8_t tens = get_tens();
     return ((0U == tens) && !dp_shown) ? BCD_BLANK : tens;
@@ -134,6 +135,13 @@ void display_clear(void)
 {
     // Blank the display, keeping the value so that it doesn't have to be written again.
     blanked = true;
+}
+
+// -----------------------------------------------------------------------------
+int8_t display_read(void)
+{
+    // Return the current value if the display is not blank.
+    return blanked ? NO_VALUE : (int8_t)(display_value);
 }
 
 // -----------------------------------------------------------------------------

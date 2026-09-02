@@ -194,6 +194,14 @@ A value below 10 is shown without a leading zero, unless the decimal point is on
 kept so that 0.7 doesn't read as .7.
 
 ```c
+int8_t display_read(void);
+```
+Returns the value the display was last given, or -1 when it is blank — which is the case before
+anything has been written and after `display_clear()`. The value is what the display was asked to
+show rather than what is lit at this instant, so it doesn't wait for a refresh, and every value it
+can show is positive, so nothing collides with the -1.
+
+```c
 void display_clear(void);
 ```
 
