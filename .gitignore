@@ -10,14 +10,24 @@
 
 # Ignore build artifacts.
 *.o
+*.d
 *.a
 *.elf
 *.hex
+*.eep
+*.srec
 *.map
 *.lst
+*.lss
 
 # Ignore the firmware build directory.
 build/
+
+# Ignore the Microchip Studio output directories and per-user settings.
+Debug/
+Release/
+*.atsuo
+*.componentinfo.xml
 
 # Ignore the AVR-Dx device family pack downloaded by the CI pipeline.
 dfp/
