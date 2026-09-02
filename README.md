@@ -3,16 +3,20 @@
 AVR32DB28 drivers for the P1 hardware development hat.
 
 ## About
-A small, deliberately plain set of drivers for the AVR32DB28 microcontroller, written for students
-on the course *Tillämpad elektronik*. The set covers every peripheral on the P1 hardware
-development hat: the LEDs, the pushbuttons, the relay, the two digit 7-segment display, the two
-potentiometers, the temperature sensor and the joystick, along with the timers a program needs to
-pace itself.
+A small, deliberately plain set of drivers for the AVR32DB28 microcontroller. The set covers every
+peripheral on the P1 hardware development hat: the LEDs, the pushbuttons, the relay, the two digit
+7-segment display, the two potentiometers, the temperature sensor and the joystick, along with the
+timers a program needs to pace itself.
 
-The drivers assume no previous experience with microcontrollers. Everything a student needs is in
-the header files: each one exposes a handful of ordinary C functions and no hardware detail at all.
-There are no registers, no bit masks and no pointers to learn before switching on an LED. The
-register work lives in the `.c` files, commented throughout for anyone curious enough to open them.
+Students design the hat themselves in *Tillämpad elektronik och hållbar utveckling*, and then
+learn to code on it in *Programmeringsmetodik*, where these drivers are what they build on.
+
+The drivers therefore assume no previous experience with microcontrollers, and nothing more of C
+than the course itself teaches. Everything a student needs is in the header files: each one
+exposes a handful of ordinary C functions and no hardware detail at all. There are no registers,
+no bit masks and no pointers to learn before switching on an LED. Registers and the rest of the
+hardware detail come in the programming course after this one; until then the register work lives
+in the `.c` files, commented throughout for anyone curious enough to open them.
 
 That simplicity is a deliberate constraint rather than a limitation of the hardware:
 * **No interrupts.** Everything is polled, so the flow of a program is the order of its statements.
@@ -135,16 +139,92 @@ and starts over when the joystick is pressed.
 
 ---
 
+## Getting started in Microchip Studio
+The quickest route to a running board is Microchip Studio, which needs no toolchain setup and no
+command line at all. The `make` targets described further down are an alternative to this, not a
+prerequisite.
+
+### 1. Get the code
+Either download it as a ZIP, which needs no Git:
+
+1. Open the repository on GitHub and press `Code > Download ZIP`.
+2. Right-click the downloaded file and choose `Extract All`.
+3. Extract somewhere short and simple, such as `C:\avr`. Do not work inside the ZIP file itself;
+   Windows shows its contents readily enough, but nothing can be built from in there.
+
+GitHub names the extracted folder `libavr32db28-p1-main`, which is the same thing as
+`libavr32db28-p1` and can be renamed if the `-main` bothers you.
+
+Or clone it, if Git is installed:
+
+```bash
+git clone https://github.com/YRGO-electrical-engineering/libavr32db28-p1.git
+```
+
+Cloning is worth the trouble if you expect to pick up later fixes, since `git pull` then replaces
+downloading the ZIP again. Either way is fine for building in Microchip Studio. The `libs/`
+submodule is only needed for the [tests](#tests), which a ZIP download leaves out and Studio does
+not build.
+
+### 2. Open the project
+Double-click `libavr32db28-p1.atsln` in the folder you just unpacked or cloned. Microchip Studio
+opens with the whole project in the `Solution Explorer` on the right: `main.c` at the top, the
+drivers under `include/` and `source/`, and the tests under `test/`.
+
+Opening `main.c` on its own also shows the code, but Studio then has no project around it and the
+build commands stay greyed out. Always start from the `.atsln`.
+
+### 3. Build
+Press `F7`, or `Build > Build Solution`. The `Output` window should end with `Build succeeded` and
+report a program of a few kilobytes.
+
+If it complains about an unknown device instead, the AVR-Dx device family pack is missing. Install
+it under `Tools > Device Pack Manager`, search for `AVR-Dx_DFP`, then build again. The project is
+set up for pack version 1.10.114; another version works just as well, it only means correcting the
+two pack paths under `Project > Properties > Toolchain`.
+
+### 4. Program the board
+With an Atmel-ICE, or a Curiosity board with a programmer built in:
+
+1. Connect the board and open `Tools > Device Programming`.
+2. Pick your tool, set `Device` to `AVR32DB28` and `Interface` to `UPDI`, then press `Apply`.
+3. Press `Read` under `Device signature` to confirm the board is answering.
+4. Go to `Memories`, check that the `Flash` box points at `Debug\libavr32db28-p1.hex`, and press
+   `Program`.
+
+Selecting the same tool under `Project > Properties > Tool` lets you skip all of that afterwards and
+simply press `Ctrl+Alt+F5` to build and program in one go.
+
+With a plain serial UPDI cable, i.e. a USB-to-serial adapter wired to the UPDI pin, Microchip Studio
+is of no use: it only talks to Microchip's own programmers. Use `make flash` instead, as described
+under [Compilation](#compilation). It picks up the `Debug/` output Studio just produced, so nothing
+has to be built twice.
+
+### 5. What you should see
+`main.c` counts on the 7-segment display: hold the joystick up to count towards 99, down to count
+back towards 0, and press it to start over from zero. Once that works, the file is yours to change.
+[Usage](#usage) shows the shape of a program and
+[docs/drivers.md](./docs/drivers.md) describes every function available.
+
+The `test/` folder is in the project so it can be read, but Studio does not build it. Those tests
+run on the computer rather than on the board, and are covered under [Tests](#tests). Ignore them
+entirely if you like; nothing on the board depends on them.
+
+---
+
 ## Structure
 
 ```text
-ci/          Scripts for compilation, testing, and code formatting
-docs/        Driver reference, i.e. every function described in full
-include/     Driver headers, i.e. the API students use
-libs/        The yrgo::test framework, checked out as a git submodule
-source/      Driver implementations and the mocked hardware platform
-test/        Unit tests, run on the host against the mocked hardware
-main.c       Application entry point
+ci/                    Scripts for compilation, flashing, testing and code formatting
+docs/                  Driver reference, i.e. every function described in full
+include/               Driver headers, i.e. the API students use
+libs/                  The yrgo::test framework, checked out as a git submodule
+source/                Driver implementations and the mocked hardware platform
+test/                  Unit tests, run on the host against the mocked hardware
+main.c                 Application entry point
+Makefile               Targets for building, flashing, testing and formatting
+libavr32db28-p1.atsln  Microchip Studio solution, opening the project below
+libavr32db28-p1.cproj  Microchip Studio project, building the firmware
 ```
 
 `include/arch/` and `source/arch/` hold the hardware platform. It selects the real AVR registers
@@ -171,8 +251,8 @@ wget http://packs.download.atmel.com/Atmel.AVR-Dx_DFP.1.10.114.atpack
 unzip -q -d dfp Atmel.AVR-Dx_DFP.1.10.114.atpack
 ```
 
-The build looks for the pack in `dfp/` by default. Set `DFP_DIR` to use a pack from somewhere else,
-such as a local Microchip Studio installation.
+The build looks for the pack in `dfp/` first, then in a local Microchip Studio installation, which
+it finds by itself if Studio is installed. Set `DFP_DIR` to point at a pack somewhere else.
 
 ---
 
@@ -183,12 +263,29 @@ The root `Makefile` cross-compiles the firmware for the AVR32DB28:
 make build
 ```
 
-The result is written to `build/main.elf`, along with a flashable `build/main.hex`. Flashing over
-UPDI:
+The result is written to `build/main.elf`, along with a flashable `build/main.hex`. Building and
+flashing in one step:
 
 ```bash
-avrdude -c serialupdi -p avr32db28 -P /dev/ttyUSB0 -U flash:w:build/main.hex:i
+make flash
 ```
+
+This expects a serial UPDI adapter, i.e. a USB-to-serial cable wired to the UPDI pin. The port
+defaults to `COM3` on Windows and `/dev/ttyUSB0` elsewhere, so pass another one if the board turns
+up somewhere else:
+
+```bash
+make flash PORT=COM4
+```
+
+Which amounts to running avrdude directly:
+
+```bash
+avrdude -c serialupdi -p avr32db28 -P COM3 -b 115200 -U flash:w:build/main.hex:i
+```
+
+Programming through an Atmel-ICE or a Curiosity board is done from Microchip Studio instead, as
+described under [Getting started in Microchip Studio](#getting-started-in-microchip-studio).
 
 ---
 
