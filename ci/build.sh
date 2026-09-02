@@ -24,22 +24,27 @@ TARGET="$BUILD_DIR/main.elf"
 # CPU frequency in Hz. The OSCHF reset default; see avr32db28-registers.md section 2.
 F_CPU=4000000UL
 
-# Fallback location of the device family pack on a local Atmel Studio installation.
-LOCAL_DFP="/mnt/c/Program Files (x86)/Atmel/Studio/7.0/packs/atmel/AVR-Dx_DFP/1.10.114"
+# Fallback locations of the device family pack on a local Atmel/Microchip Studio installation.
+# Both the WSL and the Git Bash spelling of the Windows path are tried, and any pack version, so
+# an installed Studio is found whichever shell this runs in.
+LOCAL_DFPS=(
+    "/mnt/c/Program Files (x86)/Atmel/Studio/7.0/packs/atmel/AVR-Dx_DFP"/*
+    "/c/Program Files (x86)/Atmel/Studio/7.0/packs/atmel/AVR-Dx_DFP"/*
+)
 
 ################################################################################
 # Print the directory holding the AVR-Dx device family pack, or terminate the
 # script if no pack can be found.
 # Globals:
 #   ROOT_DIR
-#   LOCAL_DFP
+#   LOCAL_DFPS
 # Arguments:
 #   None
 ################################################################################
 resolve_dfp_dir() {
     local candidate
 
-    for candidate in "${DFP_DIR:-}" "$ROOT_DIR/dfp" "$LOCAL_DFP"
+    for candidate in "${DFP_DIR:-}" "$ROOT_DIR/dfp" "${LOCAL_DFPS[@]}"
     do
         if [[ -n "$candidate" && -d "$candidate/gcc/dev/$MCU" ]]
         then
