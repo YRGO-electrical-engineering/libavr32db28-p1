@@ -1,5 +1,4 @@
 # libavr32db28-p1
-
 AVR32DB28 drivers for the P1 hardware development hat.
 
 ## About
@@ -216,7 +215,7 @@ entirely if you like; nothing on the board depends on them.
 
 ```text
 ci/                    Scripts for compilation, flashing, testing and code formatting
-docs/                  Driver reference, i.e. every function described in full
+docs/                  Driver reference and toolchain setup, i.e. the long form of this README
 include/               Driver headers, i.e. the API students use
 libs/                  The yrgo::test framework, checked out as a git submodule
 source/                Driver implementations and the mocked hardware platform
@@ -236,8 +235,11 @@ driver code compiles for both. It also provides `delay_ms`, which busy-waits on 
 ## Toolchain
 Building the firmware needs `avr-gcc` and the AVR-Dx device family pack (DFP). `avr-libc` does not
 ship the device specs or the `<avr/io.h>` header for this part, so the pack supplies them.
+Flashing adds `avrdude`, and the formatting check adds `clang-format`.
 
-`avr-gcc` is installed via `apt` on WSL:
+**[docs/toolchain.md](./docs/toolchain.md) installs all of it step by step**, on Windows in Git
+Bash as well as on Linux, and lists what each `make` target actually uses. The short version, on
+Linux or WSL:
 
 ```bash
 sudo apt -y update
@@ -323,12 +325,15 @@ make format        # Format all files.
 make format-check  # Check formatting without modifying files.
 ```
 
-`clang-format` needs to be installed and available on `PATH`:
+`clang-format` needs to be installed and available on `PATH`. On Linux or WSL:
 
 ```bash
 sudo apt -y update
 sudo apt -y install clang-format
 ```
+
+On Windows, and for why the version matters to the check, see
+[docs/toolchain.md](./docs/toolchain.md#clang-format).
 
 ---
 
