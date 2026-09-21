@@ -79,32 +79,6 @@ typedef struct
     volatile uint16_t CCMP;    /* Compare or capture. */
 } TCB_t;
 
-/** 16-bit timer type A, in the single mode the LEDs use. */
-typedef struct
-{
-    volatile uint8_t CTRLA; /* Control A. */
-    volatile uint8_t CTRLB; /* Control B. */
-    volatile uint8_t CTRLC; /* Control C. */
-    volatile uint8_t CTRLD; /* Control D. */
-    volatile uint16_t CNT;  /* Count. */
-    volatile uint16_t PER;  /* Period. */
-    volatile uint16_t CMP0; /* Compare 0. */
-    volatile uint16_t CMP1; /* Compare 1. */
-    volatile uint16_t CMP2; /* Compare 2. */
-} TCA_SINGLE_t;
-
-/** Timer type A. The device offers a split mode as well, which the drivers don't use. */
-typedef struct
-{
-    TCA_SINGLE_t SINGLE; /* Single mode registers. */
-} TCA_t;
-
-/** Peripheral pin routing. */
-typedef struct
-{
-    volatile uint8_t TCAROUTEA; /* Timer type A route A. */
-} PORTMUX_t;
-
 /** Voltage reference. */
 typedef struct
 {
@@ -123,8 +97,6 @@ extern TCB_t TCB0;
 extern TCB_t TCB1;
 extern TCB_t TCB2;
 extern VREF_t VREF;
-extern TCA_t TCA0;
-extern PORTMUX_t PORTMUX;
 
 /* Pin bit masks. */
 #define PIN0_bm 0x01
@@ -170,18 +142,6 @@ extern PORTMUX_t PORTMUX;
 #define TCB_CNTMODE_INT_gc (0x00 << 0)
 #define TCB_CLKSEL_DIV1_gc (0x00 << 1)
 #define TCB_CLKSEL_DIV2_gc (0x01 << 1)
-
-/* TCA bit masks and group configurations. */
-#define TCA_SINGLE_ENABLE_bm 0x01
-#define TCA_SINGLE_CMP0EN_bm 0x10
-#define TCA_SINGLE_CMP1EN_bm 0x20
-#define TCA_SINGLE_CMP2EN_bm 0x40
-#define TCA_SINGLE_CLKSEL_DIV16_gc (0x04 << 1)
-#define TCA_SINGLE_WGMODE_SINGLESLOPE_gc (0x03 << 0)
-
-/* PORTMUX group configurations. */
-#define PORTMUX_TCA0_PORTA_gc (0x00 << 0)
-#define PORTMUX_TCA0_PORTC_gc (0x02 << 0)
 
 /* VREF bit masks and group configurations. */
 #define VREF_ALWAYSON_bm 0x80

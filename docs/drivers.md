@@ -41,7 +41,7 @@ needed for anything the drivers do.
 ---
 
 ## Where the drivers meet
-Four things are worth knowing before writing a program that uses more than one driver.
+Three things are worth knowing before writing a program that uses more than one driver.
 
 **The display needs calling.** Its two digits share the same seven segment lines, so only one can
 be lit at a time. `display_update()` lights whichever digit's turn it is, and the digits alternate
@@ -51,10 +51,6 @@ every 5 ms. Forget to call it and the display simply stays dark, with no other s
 AVR32DB28's three TCB circuits and returns `TIMER_ID_NONE` when they are gone. `display_init()`
 reserves one for itself, so a program that also uses the display has two left. This is why
 `display_init()` returns a `bool`.
-
-**The LEDs own TCA0.** Dimming is done by the timer rather than in software, which is what lets all
-three LEDs be dimmed at once. It costs nothing from the pool above, since TCA0 is a different timer
-from the three TCBs, but it does mean TCA0 is unavailable for anything else.
 
 **Blocking delays hold up the display.** `delay_ms()`, declared in
 `include/arch/avr/hw_platform.h`, busy-waits, and nothing else happens meanwhile. 
@@ -67,43 +63,27 @@ Three LEDs on PC0 - PC2, red, green and blue, each through a series resistor to 
 D4 sits on the same three pins, and DIP switch SW4 selects which of the two banks has its cathode
 grounded, so a program drives both identically.
 
-Dimming is done by timer TCA0, whose outputs are routed to port C. The counter tops out at 99 and
-runs at 2.5 kHz, which is far above what the eye can see, and it means the compare value is the
-percentage itself.
-
 ```c
 void led_init(void);
 ```
-Configures all three LEDs as outputs and starts the PWM timer. The LEDs are left off, and driven by
-the output register rather than the timer until `led_pwm()` is called.
+Configures all three LEDs as outputs. The LEDs are left off.
 
 ```c
 bool led_read(led_id_t led);
 ```
-Returns whether the LED is lit. A dimmed LED counts as lit whenever its duty cycle is above zero,
-so an LED at 1 % reads as on. An unknown ID reads as false.
+Returns whether the LED is lit. An unknown ID reads as false.
 
 ```c
 void led_write(led_id_t led, bool state);
 ```
 
-Switches the LED fully on or fully off. If the LED was dimmed, this takes its pin back from the
-timer, so the brightness set earlier is forgotten.
+Switches the LED on or off.
 
 ```c
 void led_toggle(led_id_t led);
 ```
 
-Inverts the LED. Like `led_write()`, this takes the pin back from the timer if the LED was dimmed.
-
-```c
-void led_pwm(led_id_t led, uint8_t percent);
-```
-
-Dims the LED to the given percentage, from 0 (off) to 100 (fully on). The timer holds that
-brightness until the LED is dimmed or switched again, so one call is enough, and all three LEDs can
-be dimmed at the same time — which is how the RGB LED mixes a colour. A percentage above 100 is
-ignored, leaving the LED as it was.
+Inverts the LED.
 
 ---
 
@@ -251,8 +231,7 @@ since the conversion divides the range into 4096 steps and counts from zero.
 uint8_t pot_read_percent(pot_id_t pot);
 ```
 
-Returns the position as a percentage, from 0 to 100. This is the one to reach for when driving
-`led_pwm()`, which takes the same scale.
+Returns the position as a percentage, from 0 to 100.
 
 ---
 

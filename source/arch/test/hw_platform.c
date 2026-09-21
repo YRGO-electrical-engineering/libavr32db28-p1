@@ -19,8 +19,6 @@ TCB_t TCB0;
 TCB_t TCB1;
 TCB_t TCB2;
 VREF_t VREF;
-TCA_t TCA0;
-PORTMUX_t PORTMUX;
 
 /** Durations passed to delay_ms, and the number of calls made since the last reset. */
 static uint16_t delays[DELAY_CAPACITY] = {0U};
@@ -39,8 +37,6 @@ void testHwPlatformReset(void)
     memset((void*)&TCB1, 0, sizeof(TCB1));
     memset((void*)&TCB2, 0, sizeof(TCB2));
     memset((void*)&VREF, 0, sizeof(VREF));
-    memset((void*)&TCA0, 0, sizeof(TCA0));
-    memset((void*)&PORTMUX, 0, sizeof(PORTMUX));
 
     memset(delays, 0, sizeof(delays));
     delayCount = 0U;

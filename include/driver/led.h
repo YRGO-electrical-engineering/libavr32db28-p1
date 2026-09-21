@@ -5,7 +5,6 @@
 #define LED_H_
 
 #include <stdbool.h>
-#include <stdint.h>
 
 /**
  * @brief Enumeration of LED IDs.
@@ -45,17 +44,5 @@ void led_write(led_id_t led, bool state);
  * @param[in] led LED ID.
  */
 void led_toggle(led_id_t led);
-
-/**
- * @brief Run PWM on LED.
- *
- * @param[in] led LED ID.
- * @param[in] percent Duty cycle in percent, from 0 (off) to 100 (fully on).
- *
- * @note The brightness is held by a timer until the LED is dimmed or switched again, so one
- *       call is enough and all three LEDs can be dimmed at once. A duty cycle above 100 is
- *       ignored.
- */
-void led_pwm(led_id_t led, uint8_t percent);
 
 #endif /** LED_H_ */

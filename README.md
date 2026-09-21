@@ -37,7 +37,7 @@ hardware can do beyond what the drivers expose.
 
 | Peripheral         | Header                                                     | Reads                        | Writes                          |
 | ------------------ | ---------------------------------------------------------- | ---------------------------- | ------------------------------- |
-| LED                | [include/driver/led.h](./include/driver/led.h)             | Whether an LED is lit        | On, off, inverted or dimmed     |
+| LED                | [include/driver/led.h](./include/driver/led.h)             | Whether an LED is lit        | On, off or inverted             |
 | Switch             | [include/driver/sw.h](./include/driver/sw.h)               | Whether a button is pressed  | -                               |
 | Relay              | [include/driver/relay.h](./include/driver/relay.h)         | Whether the relay is closed  | Closed, open or inverted        |
 | Display            | [include/driver/display.h](./include/driver/display.h)     | The number being shown       | A number from 0 to 99           |
@@ -81,41 +81,6 @@ The LEDs are called `LED_RED`, `LED_GREEN` and `LED_BLUE`, and the switches `SW1
 names are the only hardware a program needs to know about: `sw_read()` reports whether a switch is
 pressed, `led_write()` switches an LED on or off, `led_toggle()` inverts one, and `led_read()`
 reports whether it is lit.
-
-`led_pwm()` dims a LED rather than switching it fully on. A timer holds the brightness, so one call
-is enough and the LED stays dimmed until it is dimmed or switched again:
-
-```c
-// Run the red LED at 30 %.
-led_pwm(LED_RED, 30U);
-
-while (1)
-{
-    // Full brightness while SW1 is held down, 30 % otherwise.
-    if (sw_read(SW1)) { led_pwm(LED_RED, 100U); }
-    else { led_pwm(LED_RED, 30U); }
-}
-```
-
-All three LEDs can be dimmed at the same time, which is how the RGB LED mixes a colour:
-
-```c
-led_pwm(LED_RED, 80U);
-led_pwm(LED_GREEN, 40U);
-led_pwm(LED_BLUE, 0U);
-```
-
-Reading a knob and dimming an LED with it is two lines, since both speak percent:
-
-```c
-pot_init();
-led_init();
-
-while (1)
-{
-    led_pwm(LED_RED, pot_read_percent(POT1));
-}
-```
 
 The display is the one peripheral that needs the program's help. Its two digits share their
 segments and are lit alternately, so `display_update()` has to be called every lap of the loop or
