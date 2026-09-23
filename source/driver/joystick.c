@@ -8,8 +8,8 @@
 #include "driver/adc.h"
 #include "driver/joystick.h"
 
-#define PORT PORTD    // Port register for the joystick.
-#define BUTTON_PIN 7U // Joystick button pin (PORTD7).
+#define PORT PORTD // Port register for the joystick.
+#define BTN_PIN 7U // Joystick button pin (PORTD7).
 
 #define CENTER 2048    // Reading each axis gives when the joystick is at rest.
 #define DEAD_ZONE 1024 // How far an axis has to move before a direction is reported.
@@ -36,7 +36,7 @@ void joystick_init(void)
 
     // The button grounds its pin when pressed, so the internal pull-up holds the pin high while
     // it is released.
-    PORT.DIR &= ~(1U << BUTTON_PIN);
+    PORT.DIR &= ~(1U << BTN_PIN);
     PORT.PIN7CTRL |= PORT_PULLUPEN_bm;
 }
 
@@ -61,5 +61,5 @@ joystick_dir_t joystick_read(void)
 bool joystick_pressed(void)
 {
     // The button grounds its pin, so a pressed button reads low.
-    return 0U == (PORT.IN & (1U << BUTTON_PIN));
+    return 0U == (PORT.IN & (1U << BTN_PIN));
 }
