@@ -98,8 +98,9 @@ while (1)
 ```
 
 A program like this goes in `main.c`, which is built with `make build` and flashed as described
-below. The `main.c` in this repository counts up on the display five times a second, and starts
-over from zero after 99.
+below. The `main.c` in this repository counts on the display as the joystick is held: up or left
+counts up, down or right counts down, wrapping around at either end. Pressing the joystick starts
+over from zero.
 
 ---
 
@@ -165,8 +166,9 @@ under [Compilation](#compilation). It picks up the `Debug/` output Studio just p
 has to be built twice.
 
 ### 5. What you should see
-`main.c` counts on the 7-segment display: up by one five times a second, starting over from zero
-after 99. Once that works, the file is yours to change.
+`main.c` counts on the 7-segment display: hold the joystick up or left to count up, down or right
+to count down, five steps a second. The count wraps around at 0 and 99, and pressing the joystick
+starts over from zero. Once that works, the file is yours to change.
 [Usage](#usage) shows the shape of a program and
 [docs/drivers.md](./docs/drivers.md) describes every function available.
 
