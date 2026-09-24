@@ -1,7 +1,8 @@
 /**
  * @file Hardware platform for AVR32DB28.
  */
-#pragma once
+#ifndef HW_PLATFORM_H_
+#define HW_PLATFORM_H_
 
 #include <stdint.h>
 
@@ -40,3 +41,5 @@ void delay_ms(uint16_t ms);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /** HW_PLATFORM_H_ */
